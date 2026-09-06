@@ -1,0 +1,27 @@
+{
+  "filesystem": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "@modelcontextprotocol/server-filesystem",
+      "./data"
+    ],
+    "description": "Servidor MCP para manipulação de arquivos locais na pasta ./data"
+  },
+  "fetch": {
+    "command": "uvx",
+    "args": [
+      "mcp-server-fetch"
+    ],
+    "description": "Servidor MCP para requisições HTTP e extração de conteúdo web em Markdown"
+  },
+  "sqlite": {
+    "command": "uvx",
+    "args": [
+      "mcp-server-sqlite",
+      "--db-path",
+      "./database.db"
+    ],
+    "description": "Servidor MCP para acesso e consulta SQL em banco SQLite"
+  }
+}
