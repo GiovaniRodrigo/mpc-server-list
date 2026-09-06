@@ -61,7 +61,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
         try:
             super().handle_one_request()
         finally:
-            activity_log.add(self.request_event(started_at))
+            if self.should_record_request():
+                activity_log.add(self.request_event(started_at))
 
     def send_response(self, code, message=None):
         self._response_status = code
@@ -94,6 +95,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 "server_key": server_key,
                 "operation": operation,
                 "request_payload": getattr(self, "_request_payload", None),
+                "response_payload": getattr(self, "_response_payload", None),
             } if operation else None,
         }
 
@@ -107,6 +109,21 @@ class DashboardHandler(BaseHTTPRequestHandler):
         if remainder.endswith("/execute"):
             return unquote(remainder.removesuffix("/execute")), "execute_tool"
         return None, None
+
+    @staticmethod
+    def is_recordable_path(path):
+        """Keep dashboard polling and static assets out of the external stream."""
+        return path == "/api/servers" or path.startswith("/api/servers/")
+
+    @staticmethod
+    def is_recordable_request(path, headers):
+        return DashboardHandler.is_recordable_path(path) and headers.get("X-Dashboard-Request") != "true"
+
+    def should_record_request(self):
+        return self.is_recordable_request(
+            urlparse(getattr(self, "path", "")).path,
+            self.headers,
+        )
 
     def do_GET(self):
         parsed = urlparse(self.path)
@@ -134,15 +151,24 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 {
                     "key": key,
                     "command": info["command"],
+                    "args": info.get("args", []),
                     "description": info.get("description", ""),
                     "status": "configured",
                     "has_credentials": bool(info.get("env")),
+                    "environment": [
+                        {
+                            "name": name,
+                            "value": value if isinstance(value, str) and value.startswith("${") else "[configured]",
+                        }
+                        for name, value in info.get("env", {}).items()
+                    ],
                 }
             )
         return {"servers": servers, "total": len(servers)}
 
     def send_tools(self, server_key):
         try:
+            self._request_payload = {"server_key": server_key}
             tools = asyncio.run(self.router.list_tools(server_key))
             payload = {
                 "server_key": server_key,
@@ -184,6 +210,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
         self.wfile.write(content)
 
     def send_json(self, payload, status=HTTPStatus.OK):
+        self._response_payload = payload
         content = json.dumps(payload, ensure_ascii=False, default=serialize_value).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")

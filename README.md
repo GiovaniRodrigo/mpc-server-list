@@ -87,8 +87,28 @@ Create or edit `config/mcp_servers.json`:
 
 ### Usage
 
+There are two execution modes:
+
+1. **MCP catalog server (stdio)** - the process is launched by an MCP client and exposes the configured catalog through `list_servers`, `list_server_tools`, and `execute_server_tool`.
+
 ```bash
 python main.py
+```
+
+2. **Dashboard and HTTP gateway** - serves the web interface and the HTTP API at `http://127.0.0.1:8000`. Requests to the API are captured by the Listener with their real headers, payloads, responses, status, and latency.
+
+```bash
+python app.py
+```
+
+The dashboard can be opened at `http://127.0.0.1:8000/monitor.html`. Its Listener reflects requests made by external systems to this running gateway; it does not display fabricated protocol responses.
+
+The stdio mode is intended for MCP clients that launch a process. The dashboard mode is intended for browser/API access and keeps its activity buffer in memory while `app.py` is running.
+
+For a local demonstration of the router without starting a server, use the `MCPRouter` class directly:
+
+```bash
+python -c "import asyncio; from src.router import MCPRouter; print(asyncio.run(MCPRouter().list_tools('fetch')))"
 ```
 
 Example code:

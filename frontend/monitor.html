@@ -208,11 +208,10 @@
       function protocolData(event) {
         const operation = event.mcp?.operation;
         const incoming = event.mcp?.request_payload;
+        const outgoing = event.mcp?.response_payload;
         const method = operation === 'execute_tool' ? 'tools/call' : operation === 'list_tools' ? 'tools/list' : 'HTTP ingress';
-        let params = {};
-        if (operation === 'execute_tool') params = { name: incoming?.tool_name || 'tool', arguments: incoming?.arguments || {} };
-        const request = { jsonrpc: '2.0', id: event.id, method, params };
-        const response = event.status >= 400 ? { jsonrpc: '2.0', id: event.id, error: { code: -32000, message: 'Request failed at transport boundary' } } : { jsonrpc: '2.0', id: event.id, result: operation === 'list_tools' ? { tools: [] } : { content: [] } };
+        const request = incoming || {};
+        const response = outgoing || { error: 'No response payload captured' };
         return { method, request, response, transport: event.mcp ? 'MCP over stdio / JSON-RPC 2.0' : 'HTTP ingress' };
       }
 

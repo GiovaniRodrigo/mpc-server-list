@@ -25,3 +25,19 @@ def test_mcp_context_decodes_server_key():
         "github/enterprise",
         "list_tools",
     )
+
+
+def test_listener_records_only_catalog_and_operation_requests():
+    assert DashboardHandler.is_recordable_path("/api/servers")
+    assert DashboardHandler.is_recordable_path("/api/servers/fetch/tools")
+    assert DashboardHandler.is_recordable_path("/api/servers/fetch/execute")
+    assert not DashboardHandler.is_recordable_path("/api/monitor")
+    assert not DashboardHandler.is_recordable_path("/monitor.html")
+
+
+def test_dashboard_catalog_request_is_not_recorded():
+    assert not DashboardHandler.is_recordable_request(
+        "/api/servers",
+        {"X-Dashboard-Request": "true"},
+    )
+    assert DashboardHandler.is_recordable_request("/api/servers", {})
