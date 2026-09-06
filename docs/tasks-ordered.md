@@ -4,7 +4,7 @@ This file reorganizes the UI gap work into a strict delivery sequence and descri
 
 ## 1. Server dashboard foundation
 
-### 1.1 Create server status dashboard
+### 1.1 Create server status dashboard (completed)
 
 Goal:
 - Display all configured MCP servers in a single operational view.
@@ -16,17 +16,16 @@ Implementation actions in code:
 - Add a `status` field derived from connection checks, configuration validation, and last execution state.
 - Provide a basic filter/search box by server key and description.
 
-Code targets:
-- `src/router.py`
-- `main.py`
-- future `ui` or `app` layer
+Implemented in `app.py` and `frontend/index.html`. The dashboard reads
+`GET /api/servers` and displays every configured server with its command,
+description, environment metadata, and configured status.
 
 Acceptance criteria:
 - All configured servers are visible from one screen.
 - Status is readable at a glance.
 - Broken or missing servers are clearly highlighted.
 
-### 1.2 Add health summary widgets
+### 1.2 Add health summary widgets (partial)
 
 Goal:
 - Summarize operational health in compact KPI cards.
@@ -41,11 +40,11 @@ Code targets:
 - `src/router.py`
 - future dashboard rendering module
 
-Acceptance criteria:
-- KPIs display current operational state.
-- Metrics are immediately understandable without reading raw backend config.
+Current status: the dashboard has catalog totals and configured-state counts.
+Live connectivity, failed-server counts, and last execution timestamps remain
+future work.
 
-### 1.3 Execution history panel
+### 1.3 Execution history panel (completed for HTTP activity)
 
 Goal:
 - Provide a readable history of tool calls and their outcomes.
@@ -56,10 +55,10 @@ Implementation actions in code:
 - Add a table or timeline view that renders the last executions.
 - Add quick filtering by server or failure-only view.
 
-Code targets:
-- `src/router.py`
-- `main.py`
-- future `history` or `logs` module
+Implemented by `ActivityLog` in `app.py` and `frontend/monitor.html`.
+The monitor shows recent HTTP/MCP gateway events with status, latency, headers,
+payloads, and response data. It is process-local and does not yet persist
+router calls made outside the HTTP gateway.
 
 Acceptance criteria:
 - A user can review recent actions without reading terminal output.
@@ -67,7 +66,7 @@ Acceptance criteria:
 
 ## 2. Tool discovery and testing flow
 
-### 2.1 Create tool catalog page
+### 2.1 Create tool catalog page (completed)
 
 Goal:
 - Make available tools discoverable without raw configuration or terminal access.
@@ -78,15 +77,14 @@ Implementation actions in code:
 - Build a catalog page with filters and grouping by server.
 - Add search by tool name or keyword.
 
-Code targets:
-- `src/router.py`
-- future `tool_catalog` view
+Implemented in `app.py` and `frontend/index.html` through the server-specific
+`/tools` endpoint and tool discovery controls.
 
 Acceptance criteria:
 - Users can browse the available tool set visually.
 - Metadata is readable and consistent.
 
-### 2.2 Create tool detail view
+### 2.2 Create tool detail view (completed)
 
 Goal:
 - Show detailed information before execution.
@@ -100,15 +98,14 @@ Implementation actions in code:
   - server ownership
 - Add a "Run tool" action from this detail panel.
 
-Code targets:
-- future `tool_detail` view
-- `src/router.py`
+Implemented in `frontend/index.html`; selected tools expose their description,
+input schema, server ownership, and execution controls.
 
 Acceptance criteria:
 - A user understands the purpose and required inputs before running a tool.
 - The panel is scannable, not overloaded with raw JSON alone.
 
-### 2.3 Implement execution form
+### 2.3 Implement execution form (completed)
 
 Goal:
 - Let users execute tools from a safe UI without terminal interaction.
@@ -120,10 +117,8 @@ Implementation actions in code:
 - Capture response and render it in a readable panel.
 - Add handling for execution errors and timeout states.
 
-Code targets:
-- `src/router.py`
-- `main.py`
-- future `tool_executor` view
+Implemented in `app.py` and `frontend/index.html`. The form sends a JSON body to
+`POST /api/servers/{server_key}/execute` and renders success or error responses.
 
 Acceptance criteria:
 - A user can trigger a tool from the UI.

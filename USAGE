@@ -49,6 +49,25 @@ python main.py
 
 The demo lists registered servers, discovers tools on the `fetch` server, and attempts to call its `fetch` tool.
 
+## Run the Dashboard
+
+Start the HTTP gateway from the repository root:
+
+```bash
+python app.py
+```
+
+Open `http://127.0.0.1:8000/` for the server catalog or `http://127.0.0.1:8000/monitor.html` for the traffic monitor. The catalog page can discover tools and execute them through the gateway. The monitor displays real requests handled by this process; it does not generate synthetic MCP traffic.
+
+The gateway exposes these endpoints:
+
+- `GET /api/servers` - list configured servers.
+- `GET /api/servers/{server_key}/tools` - list tools from a server.
+- `POST /api/servers/{server_key}/execute` - execute a tool with `{"tool_name": "...", "arguments": {}}`.
+- `GET /api/monitor` - return recent activity events.
+
+The activity buffer is process-local and limited to 200 events. Sensitive headers are redacted, and dashboard polling requests are omitted from the external activity stream.
+
 ## Use the Router in Python
 
 ```python

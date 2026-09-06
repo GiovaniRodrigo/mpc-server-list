@@ -21,14 +21,18 @@ mpc-server-list/
 │
 ├── src/
 │   ├── __init__.py
-│   ├── config.py              # Configuration parsing and validation
-│   ├── exceptions.py           # Custom application exceptions
+│   ├── catalog_server.py      # MCP catalog tools exposed over stdio
+│   ├── exceptions.py          # Custom application exceptions
 │   └── router.py              # Core routing engine and lifecycle management
 │
-├── main.py                    # Entry point and execution example
+├── app.py                     # Dashboard and HTTP gateway entry point
+├── frontend/                  # Dashboard pages (catalog and monitor)
+├── main.py                    # MCP stdio entry point and example
+├── tests/                     # Router and HTTP gateway tests
 ├── requirements.txt           # Project dependencies
-├── mcp_architecture_router.md # Detailed architecture documentation
-└── README.md                  # This file
+├── USAGE                      # Setup and operational instructions
+├── mcp_architecture_router.md # Detailed router architecture
+└── README.md                 # This file
 ```
 
 ## 🏗️ Architecture Patterns
@@ -111,6 +115,27 @@ For a local demonstration of the router without starting a server, use the `MCPR
 python -c "import asyncio; from src.router import MCPRouter; print(asyncio.run(MCPRouter().list_tools('fetch')))"
 ```
 
+### Dashboard API
+
+When `python app.py` is running, the HTTP gateway exposes:
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/servers` | Return the configured server catalog, including command, arguments, description, and environment metadata. |
+| `GET` | `/api/servers/{server_key}/tools` | Discover tools exposed by one configured server. |
+| `POST` | `/api/servers/{server_key}/execute` | Execute a tool with a JSON body containing `tool_name` and optional `arguments`. |
+| `GET` | `/api/monitor` | Return recent gateway activity captured by the listener. |
+
+Example execution request:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/servers/fetch/execute \
+  -H 'Content-Type: application/json' \
+  -d '{"tool_name":"fetch","arguments":{"url":"https://httpbin.org/get"}}'
+```
+
+The listener stores at most 200 events in memory while the process is running. It records status, latency, client, protocol headers, request payload, and response payload for MCP gateway requests. Authorization, cookie, proxy-authorization, and set-cookie headers are redacted. Requests made by the dashboard itself are excluded from the stream.
+
 Example code:
 
 ```python
@@ -164,7 +189,7 @@ asyncio.run(main())
 
 ## 📚 Documentation
 
-For detailed architecture documentation, design patterns, and implementation details, see [mcp_architecture_router.md](./mcp_architecture_router.md).
+For setup and operational details, see [USAGE](./USAGE). For the current component architecture, see [ARCHITECTURE.md](./ARCHITECTURE.md) and [mcp_architecture_router.md](./mcp_architecture_router.md).
 
 ## 🛠️ Best Practices & Extensibility
 

@@ -4,7 +4,7 @@ This file breaks the UI action plan into small, executable tasks that can be imp
 
 ## Phase 1 — Server visibility and operational overview
 
-### Task 1.1 — Create server status dashboard
+### Task 1.1 — Create server status dashboard (completed)
 - Goal: Add a page that shows all registered MCP servers in one place.
 - Scope:
   - list all server keys from the configuration
@@ -14,8 +14,11 @@ This file breaks the UI action plan into small, executable tasks that can be imp
   - dashboard loads without manual code inspection
   - server list is clear and searchable
   - unknown or broken server states are visibly labeled
+- Delivered by `app.py` and `frontend/index.html` through `GET /api/servers`.
+  The current status is configuration-based; live connectivity checks remain
+  future work.
 
-### Task 1.2 — Add health summary widgets
+### Task 1.2 — Add health summary widgets (partial)
 - Goal: Provide high-level operational metrics.
 - Scope:
   - total servers
@@ -26,8 +29,10 @@ This file breaks the UI action plan into small, executable tasks that can be imp
   - summary cards are visible above the list
   - values refresh correctly
   - status colors clearly communicate health
+- The catalog total and configured-state summary are available. Live health,
+  failure counts, and last execution metrics are not implemented yet.
 
-### Task 1.3 — Execution history panel
+### Task 1.3 — Execution history panel (completed for HTTP activity)
 - Goal: Add a log of recent tool executions.
 - Scope:
   - timestamp
@@ -39,10 +44,13 @@ This file breaks the UI action plan into small, executable tasks that can be imp
   - user can see the last executions in a timeline or table
   - failed calls show error context
   - panel is readable without technical knowledge
+- Delivered by `ActivityLog` in `app.py` and `frontend/monitor.html`. The
+  bounded in-memory monitor covers gateway requests and does not persist direct
+  router calls.
 
 ## Phase 2 — Tool discovery and execution UX
 
-### Task 2.1 — Create tool catalog page
+### Task 2.1 — Create tool catalog page (completed)
 - Goal: Expose available tools in a browsable UI.
 - Scope:
   - list discovered tools by server
@@ -51,8 +59,9 @@ This file breaks the UI action plan into small, executable tasks that can be imp
 - Acceptance criteria:
   - users can browse tools without editing config files
   - tool metadata is displayed clearly and consistently
+- Delivered by the server catalog page and `GET /api/servers/{server_key}/tools`.
 
-### Task 2.2 — Create tool detail view
+### Task 2.2 — Create tool detail view (completed)
 - Goal: Show detailed metadata for a selected tool.
 - Scope:
   - schema preview
@@ -62,8 +71,10 @@ This file breaks the UI action plan into small, executable tasks that can be imp
 - Acceptance criteria:
   - a user can understand what the tool does before running it
   - the detail view is scannable and not overloaded
+- Delivered in `frontend/index.html` with schema, description, ownership, and
+  execution controls.
 
-### Task 2.3 — Implement execution form
+### Task 2.3 — Implement execution form (completed)
 - Goal: Add a form to test a tool from the UI.
 - Scope:
   - request JSON editor or form builder
@@ -73,6 +84,7 @@ This file breaks the UI action plan into small, executable tasks that can be imp
   - execution can be triggered without terminal access
   - invalid payloads are blocked before submission
   - responses are rendered clearly
+- Delivered by the dashboard form and `POST /api/servers/{server_key}/execute`.
 
 ## Phase 3 — Configuration and governance
 

@@ -44,15 +44,34 @@ mpc-server-list/
 │
 ├── src/
 │   ├── __init__.py
-│   ├── config.py              # Parser e validação das configurações
+│   ├── catalog_server.py      # Catálogo MCP exposto por stdio
 │   ├── exceptions.py          # Exceções customizadas da aplicação
 │   └── router.py              # Motor principal de roteamento e ciclo de vida
 │
-├── main.py                    # Script de entrada e exemplo de execução
+├── app.py                     # Dashboard e gateway HTTP
+├── frontend/                  # Catálogo e monitor web
+├── main.py                    # Servidor MCP stdio e exemplo de execução
+├── tests/                     # Testes do roteador e gateway HTTP
 ├── requirements.txt           # Dependências do projeto
 ├── mcp_architecture_router.md # Documentação detalhada da arquitetura
 └── README.md                  # Documentação do repositório
 ```
+
+### Dashboard HTTP
+
+`app.py` oferece uma segunda superfície de execução além do servidor MCP por
+stdio. O gateway serve `frontend/index.html` e `frontend/monitor.html` e expõe:
+
+- `GET /api/servers` para o catálogo configurado;
+- `GET /api/servers/{server_key}/tools` para descoberta de ferramentas;
+- `POST /api/servers/{server_key}/execute` para execução com `tool_name` e
+    `arguments` no corpo JSON;
+- `GET /api/monitor` para eventos recentes do gateway.
+
+O `ActivityLog` mantém no máximo 200 eventos em memória, registra status,
+latência e metadados de protocolo, mascara cabeçalhos sensíveis e ignora o
+polling gerado pelo dashboard. Os eventos são descartados quando o processo é
+encerrado.
 
 ---
 

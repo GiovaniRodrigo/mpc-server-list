@@ -9,8 +9,13 @@ mpc-server-list/
 │   └── mcp_servers.json      # Server registry
 ├── src/
 │   ├── __init__.py
+│   ├── catalog_server.py      # MCP catalog exposed over stdio
 │   ├── exceptions.py         # Custom exceptions
 │   └── router.py             # Core routing engine
+├── frontend/
+│   ├── index.html             # Server catalog and tool execution UI
+│   └── monitor.html           # HTTP/MCP traffic monitor
+├── app.py                     # Dashboard and HTTP gateway
 ├── main.py                   # Demo & entry point
 ├── requirements.txt          # Dependencies
 ├── README.md                 # Quick start
@@ -20,7 +25,30 @@ mpc-server-list/
 
 ## Core Components
 
-### 1. **MCPRouter** (`src/router.py`)
+### 1. **Dashboard HTTP Gateway** (`app.py`)
+
+`DashboardHandler` serves the static frontend and adapts HTTP requests to the
+shared `MCPRouter` instance. The gateway provides:
+
+| Method | Path | Behavior |
+| --- | --- | --- |
+| `GET` | `/api/servers` | Returns the configured catalog and environment metadata. |
+| `GET` | `/api/servers/{server_key}/tools` | Discovers tools through `MCPRouter.list_tools()`. |
+| `POST` | `/api/servers/{server_key}/execute` | Calls `MCPRouter.execute_tool()` using `tool_name` and `arguments` from the JSON body. |
+| `GET` | `/api/monitor` | Returns the in-memory activity snapshot. |
+
+The listener records gateway requests with status, duration, client address,
+protocol metadata, and MCP request/response payloads. It redacts sensitive
+headers and ignores requests marked as dashboard polling. The buffer is bounded
+to 200 events and is lost when the process stops.
+
+### 2. **MCP Catalog Server** (`src/catalog_server.py`)
+
+The stdio entry point exposes the configured catalog as MCP tools. It delegates
+server lookup, tool discovery, and execution to `MCPRouter`, allowing an MCP
+client to launch `main.py` without using the HTTP dashboard.
+
+### 3. **MCPRouter** (`src/router.py`)
 The main class that handles all MCP server interactions.
 
 **Key Methods:**

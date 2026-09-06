@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project has a solid technical foundation, but it is currently more of an engineering backbone than a finished user-facing product. The architecture is coherent, the server orchestration principles are clear, and the implementation is modular and extensible. However, the user experience layer is still missing.
+This project has a solid technical foundation and now includes an initial user-facing dashboard. The architecture is coherent, the server orchestration principles are clear, and the implementation is modular and extensible. The dashboard covers catalog visibility, tool discovery, execution, and HTTP activity monitoring; configuration governance and live server health remain incomplete.
 
 ## What is already strong
 
@@ -20,17 +20,17 @@ The use of async context managers and controlled subprocess initialization helps
 
 ## What is missing from a UI perspective
 
-### 1. No visual inventory of systems
-There is no dashboard or interface showing which servers are active, offline, unavailable, or misconfigured. This makes operations harder to follow without reading logs or code.
+### 1. Initial inventory is available, but health is configuration-based
+The dashboard lists configured servers and exposes command, description, and environment metadata. It currently reports configured status rather than active, offline, unavailable, or misconfigured connectivity states.
 
-### 2. No accessible tool catalog
-The project needs a UI that lists available tools, descriptions, suggested parameters, and examples. Developers should be able to inspect the tool registry without diving into code or configuration files.
+### 2. Tool catalog is available
+The dashboard discovers tools per server and exposes descriptions, schemas, ownership, and execution controls. Search, richer examples, and cross-server catalog filtering remain opportunities for refinement.
 
-### 3. No execution console
-A user cannot easily test a tool in a safe, structured environment. Executing tool calls should be visible, traceable, and guided by a UI instead of raw terminal output.
+### 3. Execution console is available
+Users can submit tool calls from the dashboard and inspect structured responses or errors. Stronger client-side schema validation and request previews would improve safety.
 
-### 4. No observability layer
-The product would benefit from execution history, logs, status indicators, and failure notifications. Without this, trust in the system is weaker.
+### 4. Initial observability layer is available
+The monitor displays real HTTP/MCP gateway requests, status, latency, headers, and payloads. Events are process-local, capped at 200, and do not include direct router calls outside the HTTP gateway.
 
 ### 5. No admin or configuration UX
 The configuration is presently JSON-driven. A user-facing config management screen would make it much easier to add, validate, and manage server definitions without manual editing.
@@ -41,7 +41,7 @@ The value proposition is not visually communicated. Users need to understand qui
 ## Product assessment
 
 ### Verdict
-The project is strong as an infrastructure layer and capable of becoming a meaningful product, but it is still in an engineering-first stage rather than a polished user experience stage.
+The project now has a usable first dashboard slice while remaining in an engineering-first stage rather than a fully governed operational product.
 
 ### Product maturity level
 - Backend architecture: strong
