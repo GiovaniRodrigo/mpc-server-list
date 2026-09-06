@@ -23,5 +23,192 @@
       "./database.db"
     ],
     "description": "Servidor MCP para acesso e consulta SQL em banco SQLite"
+  },
+  "github": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "@modelcontextprotocol/server-github"
+    ],
+    "env": {
+      "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+    },
+    "description": "Servidor MCP oficial para criar PRs, inspecionar repositórios, gerenciar issues e buscar arquivos no GitHub"
+  },
+  "postgresql": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "@modelcontextprotocol/server-postgres"
+    ],
+    "env": {
+      "DATABASE_URL": "${DATABASE_URL}"
+    },
+    "description": "Servidor MCP para consultar PostgreSQL, validar esquemas e fazer buscas complexas via linguagem natural"
+  },
+  "mongodb": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "mcp-server-mongodb"
+    ],
+    "env": {
+      "MONGODB_URI": "${MONGODB_URI}"
+    },
+    "description": "Servidor MCP para conectar e consultar bancos de dados MongoDB"
+  },
+  "supabase": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "@modelcontextprotocol/server-supabase"
+    ],
+    "env": {
+      "SUPABASE_URL": "${SUPABASE_URL}",
+      "SUPABASE_KEY": "${SUPABASE_KEY}"
+    },
+    "description": "Servidor MCP para acesso a PostgreSQL, autenticação, storage e funções serverless via Supabase"
+  },
+  "notion": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "mcp-server-notion"
+    ],
+    "env": {
+      "NOTION_API_KEY": "${NOTION_API_KEY}"
+    },
+    "description": "Servidor MCP para interagir com bases de conhecimento no Notion"
+  },
+  "slack": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "@modelcontextprotocol/server-slack"
+    ],
+    "env": {
+      "SLACK_BOT_TOKEN": "${SLACK_BOT_TOKEN}"
+    },
+    "description": "Servidor MCP para enviar mensagens e consultar canais no Slack"
+  },
+  "stripe": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "@modelcontextprotocol/server-stripe"
+    ],
+    "env": {
+      "STRIPE_API_KEY": "${STRIPE_API_KEY}"
+    },
+    "description": "Servidor MCP para consultar pagamentos, assinaturas, clientes e faturas no Stripe"
+  },
+  "linear": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "mcp-server-linear"
+    ],
+    "env": {
+      "LINEAR_API_KEY": "${LINEAR_API_KEY}"
+    },
+    "description": "Servidor MCP para gestão autônoma de tarefas e sprints no Linear"
+  },
+  "jira": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "@modelcontextprotocol/server-jira"
+    ],
+    "env": {
+      "JIRA_URL": "${JIRA_URL}",
+      "JIRA_TOKEN": "${JIRA_TOKEN}"
+    },
+    "description": "Servidor MCP para gestão autônoma de tarefas, sprints e projetos no Jira"
+  },
+  "docker": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "@modelcontextprotocol/server-docker"
+    ],
+    "env": {
+      "DOCKER_HOST": "${DOCKER_HOST}"
+    },
+    "description": "Servidor MCP para conectar ao ecossistema Docker, inspecionar contêineres e verificar logs"
+  },
+  "sentry": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "@modelcontextprotocol/server-sentry"
+    ],
+    "env": {
+      "SENTRY_AUTH_TOKEN": "${SENTRY_AUTH_TOKEN}",
+      "SENTRY_ORG": "${SENTRY_ORG}"
+    },
+    "description": "Servidor MCP para ler exceções, rastrear stack traces e analisar erros de produção em tempo real"
+  },
+  "playwright": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "@modelcontextprotocol/server-playwright"
+    ],
+    "description": "Servidor MCP da Microsoft para automação web e testes end-to-end via navegação headless"
+  },
+  "puppeteer": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "@modelcontextprotocol/server-puppeteer"
+    ],
+    "description": "Servidor MCP para automação web e testes end-to-end via Puppeteer headless"
+  },
+  "firecrawl": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "mcp-server-firecrawl"
+    ],
+    "env": {
+      "FIRECRAWL_API_KEY": "${FIRECRAWL_API_KEY}"
+    },
+    "description": "Servidor MCP para scraping web e extração de conteúdo otimizado para LLMs, convertendo sites em Markdown"
+  },
+  "exa": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "mcp-server-exa"
+    ],
+    "env": {
+      "EXA_API_KEY": "${EXA_API_KEY}"
+    },
+    "description": "Servidor MCP de busca e extração voltado para LLMs com resultados otimizados para ingestão de contexto"
+  },
+  "neon": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "@modelcontextprotocol/server-neon"
+    ],
+    "env": {
+      "NEON_API_KEY": "${NEON_API_KEY}"
+    },
+    "description": "Servidor MCP para gerenciamento de bancos PostgreSQL serverless com suporte a branching de banco de dados"
+  },
+  "mysql": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "@modelcontextprotocol/server-mysql"
+    ],
+    "env": {
+      "MYSQL_HOST": "${MYSQL_HOST}",
+      "MYSQL_USER": "${MYSQL_USER}",
+      "MYSQL_PASSWORD": "${MYSQL_PASSWORD}",
+      "MYSQL_DATABASE": "${MYSQL_DATABASE}"
+    },
+    "description": "Servidor MCP para consultar bancos de dados MySQL locais e fazer buscas complexas via linguagem natural"
   }
 }
