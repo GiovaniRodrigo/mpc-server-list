@@ -1,0 +1,92 @@
+# Usage
+
+## Requirements
+
+- Python 3.10 or newer
+- Node.js and `npx` for servers configured with `npx`
+- `uvx` for servers configured with `uvx`
+- Any additional runtime required by the configured MCP servers
+
+## Install
+
+Create and activate a virtual environment, then install the dependencies:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+On Windows, activate the environment with:
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+## Configure MCP Servers
+
+Edit `config/mcp_servers.json`. Each server is identified by a unique key and must define a command and its arguments:
+
+```json
+{
+  "fetch": {
+    "command": "uvx",
+    "args": ["mcp-server-fetch"],
+    "description": "Fetches web content"
+  }
+}
+```
+
+The command and arguments must be executable in the environment where the router runs. Keep credentials in environment variables instead of committing secrets to the configuration file.
+
+## Run the Demo
+
+Run the example entry point from the repository root:
+
+```bash
+python main.py
+```
+
+The demo lists registered servers, discovers tools on the `fetch` server, and attempts to call its `fetch` tool.
+
+## Use the Router in Python
+
+```python
+import asyncio
+from src.router import MCPRouter
+
+
+async def main():
+    router = MCPRouter("config/mcp_servers.json")
+
+    tools = await router.list_tools("fetch")
+    for tool in tools:
+        print(tool.name)
+
+    result = await router.execute_tool(
+        server_key="fetch",
+        tool_name="fetch",
+        arguments={"url": "https://httpbin.org/get"},
+    )
+    print(result.content[0].text)
+
+
+asyncio.run(main())
+```
+
+Use the key from `mcp_servers.json` as `server_key`. The `tool_name` and `arguments` must match a tool exposed by that MCP server.
+
+## Run Tests
+
+```bash
+pytest
+```
+
+Tests use the project router implementation and do not require every external MCP server to be available.
+
+## Troubleshooting
+
+- **Server not found:** confirm that `server_key` exactly matches a key in `config/mcp_servers.json`.
+- **Command not found:** install the runtime used by the server configuration, such as Node.js, `uv`, or Python.
+- **Tool call fails:** verify the server is installed, reachable, and that the tool name and arguments match its schema.
+- **Configuration errors:** validate that `mcp_servers.json` contains valid JSON and that each server has the required fields.

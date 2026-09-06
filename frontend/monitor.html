@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MCP Control Room / Listener</title>
+    <style>
+      :root { --ink: #17211b; --muted: #68746b; --paper: #f3f5ef; --panel: #fff; --line: #dce3d9; --green: #2d6a4f; --green-soft: #e5f1e9; --orange: #b66a2c; --red: #a14534; --red-soft: #fbe9e5; --shadow: 0 18px 50px rgba(36, 57, 43, .08); }
+      * { box-sizing: border-box; }
+      body { margin: 0; color: var(--ink); background: var(--paper); font-family: "IBM Plex Sans", "Trebuchet MS", sans-serif; }
+      button, input, select { font: inherit; }
+      button { cursor: pointer; }
+      .shell { min-height: 100vh; display: grid; grid-template-columns: 250px 1fr; }
+      .sidebar { padding: 28px 20px; background: #1b2a22; color: #eff6ed; display: flex; flex-direction: column; }
+      .logo { display: flex; gap: 10px; align-items: center; font-size: 1.05rem; font-weight: 700; letter-spacing: .04em; }
+      .logo-mark { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; color: #1b2a22; background: #b7d8bd; font-weight: 800; }
+      .sidebar small { margin: 52px 12px 12px; color: #9eb2a3; text-transform: uppercase; letter-spacing: .12em; font-size: .68rem; }
+      .nav { display: grid; gap: 5px; }
+      .nav a { padding: 11px 12px; border-radius: 7px; color: #b7c9bb; text-decoration: none; }
+      .nav a.active, .nav a:hover { color: #fff; background: #294436; }
+      .sidebar-footer { margin-top: auto; padding: 14px 12px; border-top: 1px solid #385143; color: #9eb2a3; font-size: .82rem; line-height: 1.5; }
+      main { max-width: 1500px; width: 100%; padding: 34px 44px 54px; margin: 0 auto; }
+      .topbar { display: flex; justify-content: space-between; gap: 24px; align-items: flex-start; margin-bottom: 30px; }
+      .kicker { color: var(--green); text-transform: uppercase; letter-spacing: .16em; font-size: .72rem; font-weight: 700; }
+      h1 { margin: 7px 0 8px; font-family: Georgia, serif; font-weight: 500; font-size: clamp(2rem, 4vw, 3.3rem); letter-spacing: -.03em; }
+      .subtitle { margin: 0; color: var(--muted); max-width: 700px; }
+      .actions { display: flex; gap: 10px; align-items: center; }
+      .button { border: 1px solid var(--line); padding: 10px 14px; border-radius: 7px; color: var(--ink); background: var(--panel); font-weight: 700; }
+      .button.primary { color: #fff; background: var(--green); border-color: var(--green); }
+      .button:hover { filter: brightness(.97); transform: translateY(-1px); }
+      .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+      .metric, .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); }
+      .metric { padding: 18px 20px; }
+      .metric-label { color: var(--muted); font-size: .8rem; }
+      .metric-value { display: block; margin-top: 7px; font-size: 1.8rem; font-weight: 700; }
+      .metric-note { display: block; margin-top: 4px; color: var(--green); font-size: .78rem; }
+      .panel-header { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 20px 22px; border-bottom: 1px solid var(--line); }
+      h2 { margin: 0; font-size: 1.1rem; }
+      .live { display: inline-flex; align-items: center; gap: 8px; color: var(--green); font-size: .78rem; font-weight: 700; }
+      .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 4px var(--green-soft); }
+      .filters { display: flex; gap: 9px; padding: 14px 22px; border-bottom: 1px solid var(--line); background: #fbfcfa; }
+      .control { min-width: 150px; border: 1px solid var(--line); border-radius: 6px; padding: 9px 11px; color: var(--ink); background: var(--panel); }
+      .control.search { flex: 1; min-width: 220px; }
+      .table-wrap { overflow-x: auto; }
+      table { width: 100%; border-collapse: collapse; min-width: 980px; }
+      th, td { padding: 13px 18px; border-bottom: 1px solid #eef1ec; text-align: left; vertical-align: top; font-size: .8rem; }
+      th { color: var(--muted); font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; }
+      td code { color: var(--green); font-family: monospace; }
+      .method { color: var(--ink); font-weight: 700; }
+      .status { display: inline-block; padding: 4px 7px; border-radius: 5px; color: var(--green); background: var(--green-soft); font-family: monospace; font-weight: 700; }
+      .status.error { color: var(--red); background: var(--red-soft); }
+      .subtle { display: block; margin-top: 4px; color: var(--muted); font-size: .72rem; }
+      .kind { display: inline-block; margin-top: 5px; padding: 3px 6px; border-radius: 4px; color: var(--green); background: var(--green-soft); font-size: .68rem; font-weight: 700; text-transform: uppercase; }
+      .kind.http { color: var(--muted); background: #edf0ec; }
+      details summary { cursor: pointer; color: var(--green); font-size: .76rem; }
+      .headers { display: grid; gap: 4px; max-width: 360px; margin-top: 8px; color: var(--muted); font-family: monospace; font-size: .7rem; overflow-wrap: anywhere; }
+      .network-panel { overflow: hidden; border: 1px solid #dce3d9; border-radius: 9px; }
+      .network-copy { max-width: 560px; }
+      .network-canvas { position: relative; min-height: 330px; overflow: hidden; background-color: #fff; background-image: linear-gradient(#edf2ec 1px, transparent 1px), linear-gradient(90deg, #edf2ec 1px, transparent 1px); background-size: 32px 32px; }
+      .network-canvas::before { position: absolute; inset: 0; content: ""; pointer-events: none; background: radial-gradient(circle at 50% 50%, rgba(229, 241, 233, .78), transparent 48%); }
+      .network-svg { position: relative; display: block; width: 100%; min-width: 760px; height: 330px; }
+      .network-line { fill: none; stroke: #a6c5ad; stroke-width: 2; stroke-dasharray: 8 10; animation: flow 1.4s linear infinite; }
+      .network-line.reverse { animation-direction: reverse; stroke: #d7a274; }
+      .packet { fill: #2d6a4f; filter: drop-shadow(0 3px 3px rgba(45, 106, 79, .2)); }
+      .packet.reverse { fill: #b66a2c; }
+      .node { fill: #fff; stroke: #dce3d9; stroke-width: 2; }
+      .node-accent { fill: #e5f1e9; }
+      .node-label { fill: #17211b; font: 700 15px "Trebuchet MS", sans-serif; }
+      .node-meta { fill: #68746b; font: 12px monospace; }
+      .rpc-file { fill: #fffdf8; stroke: #e5c990; stroke-width: 2; filter: drop-shadow(0 10px 18px rgba(91, 74, 35, .1)); }
+      .rpc-fold { fill: #f0dba9; }
+      .rpc-title { fill: #7f6224; font: 700 12px monospace; }
+      .rpc-text { fill: #5f5a4b; font: 11px monospace; }
+      .canvas-caption { position: absolute; right: 20px; bottom: 16px; color: #9aa89e; font: 11px monospace; letter-spacing: .05em; }
+      @keyframes flow { to { stroke-dashoffset: -36; } }
+      .event-row { cursor: pointer; transition: background .15s ease; }
+      .event-row:hover, .event-row:focus { outline: none; background: #f4f8f2; }
+      .open-event { padding: 6px 9px; border: 1px solid var(--line); border-radius: 5px; color: var(--green); background: #fff; font-size: .72rem; font-weight: 700; }
+      .modal-backdrop { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 24px; background: rgba(23, 33, 27, .48); backdrop-filter: blur(5px); }
+      .modal-backdrop[hidden] { display: none; }
+      .modal { width: min(920px, 100%); max-height: min(780px, 92vh); overflow: auto; border: 1px solid #cfdacf; border-radius: 12px; background: #fff; box-shadow: 0 28px 90px rgba(23, 33, 27, .22); }
+      .modal-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; padding: 24px 26px; border-bottom: 1px solid var(--line); }
+      .modal-title { margin: 0; font-family: Georgia, serif; font-size: 1.65rem; font-weight: 500; }
+      .modal-subtitle { margin: 6px 0 0; color: var(--muted); font-size: .82rem; }
+      .close-modal { width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 50%; color: var(--ink); background: #fff; font-size: 1.2rem; line-height: 1; }
+      .modal-body { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; padding: 24px 26px 28px; }
+      .modal-section { min-width: 0; }
+      .modal-section h3 { margin: 0 0 11px; color: var(--muted); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; }
+      .listener-meta { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 0 22px 16px; }
+      .listener-stat { padding: 12px 14px; border: 1px solid var(--line); border-radius: 7px; background: #fbfcfa; }
+      .listener-stat-label { display: block; color: var(--muted); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; }
+      .listener-stat-value { display: block; margin-top: 5px; color: var(--ink); font: 700 .9rem monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .http-strip { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 22px; border-bottom: 1px solid var(--line); background: #f7faf6; }
+      .http-chip { padding: 5px 8px; border: 1px solid #d3e2d5; border-radius: 5px; color: var(--green); background: #fff; font: 700 .72rem monospace; }
+      .http-chip.muted { color: var(--muted); border-color: var(--line); }
+      .request-line { stroke: #2d6a4f; }
+      .response-line { stroke: #b66a2c; }
+      .detail-list { display: grid; gap: 8px; margin: 0; }
+      .detail-list div { display: flex; justify-content: space-between; gap: 16px; padding-bottom: 8px; border-bottom: 1px solid #eef1ec; font-size: .82rem; }
+      .detail-list dt { color: var(--muted); }
+      .detail-list dd { max-width: 65%; margin: 0; overflow-wrap: anywhere; text-align: right; font-weight: 700; }
+      .code-block { max-height: 230px; overflow: auto; margin: 0; padding: 14px; border-radius: 7px; color: #dce9de; background: #1b2a22; font: .72rem/1.55 monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+      .modal-wide { grid-column: 1 / -1; }
+      .protocol-label { display: inline-block; margin: 0 0 12px; padding: 5px 8px; border-radius: 5px; color: #7f6224; background: #fff8e8; font: 700 .7rem monospace; }
+      .empty, .error { padding: 32px; color: var(--muted); text-align: center; }
+      .error { color: var(--red); }
+      @media (max-width: 980px) { .shell { grid-template-columns: 1fr; } .sidebar { padding: 16px 20px; } .sidebar small, .sidebar-footer { display: none; } .nav { display: flex; margin-top: 18px; overflow: auto; } main { padding: 28px 20px; } }
+      @media (max-width: 650px) { .topbar { display: block; } .actions { margin-top: 18px; } .metrics { grid-template-columns: repeat(2, 1fr); } .panel-header, .filters { align-items: stretch; flex-direction: column; } .control.search { min-width: 0; } .modal-body { grid-template-columns: 1fr; } .modal-wide { grid-column: auto; } .listener-meta { grid-template-columns: repeat(2, 1fr); margin-inline: 14px; } .network-canvas { min-height: 300px; } .network-svg { height: 300px; } }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="logo"><span class="logo-mark">M</span> MCP CONTROL ROOM</div>
+        <small>Workspace</small>
+        <nav class="nav" aria-label="Main navigation">
+          <a href="/">Overview</a>
+          <a class="active" href="/monitor.html">Listener</a>
+          <a href="/">Tool catalog</a>
+          <a href="/">Configuration</a>
+        </nav>
+        <div class="sidebar-footer">Live inspection of HTTP ingress and MCP operations in this workspace.</div>
+      </aside>
+      <main>
+        <header class="topbar">
+          <div><div class="kicker">Observability / Request stream</div><h1>Listener activity</h1><p class="subtitle">Trace every request arriving at the control room and see which MCP operation it triggered, with protocol context preserved.</p></div>
+          <div class="actions"><span class="live"><span class="live-dot" aria-hidden="true"></span>Listening live</span><button class="button primary" id="refresh" type="button">Refresh now</button></div>
+        </header>
+        <section class="metrics" aria-label="Listener summary">
+          <div class="metric"><span class="metric-label">Captured events</span><strong class="metric-value" id="total">--</strong><span class="metric-note">Rolling buffer</span></div>
+          <div class="metric"><span class="metric-label">MCP operations</span><strong class="metric-value" id="mcp">--</strong><span class="metric-note">Tool discovery and calls</span></div>
+          <div class="metric"><span class="metric-label">HTTP errors</span><strong class="metric-value" id="errors">--</strong><span class="metric-note">4xx and 5xx responses</span></div>
+          <div class="metric"><span class="metric-label">Average latency</span><strong class="metric-value" id="latency">--</strong><span class="metric-note">Across captured events</span></div>
+        </section>
+        <section class="panel">
+          <div class="panel-header"><div><h2>Incoming request stream</h2><span class="subtle">Newest events appear first. Sensitive headers are redacted at capture time.</span></div><span class="subtle" id="updated">Waiting for data</span></div>
+          <div class="filters"><input class="control search" id="search" type="search" placeholder="Filter route, server, or operation" aria-label="Filter events" /><select class="control" id="kind"><option value="all">All event types</option><option value="mcp">MCP only</option><option value="http">HTTP only</option></select><select class="control" id="status"><option value="all">All statuses</option><option value="success">Success</option><option value="error">Errors</option></select></div>
+          <div class="table-wrap" id="events"><div class="empty">Waiting for requests...</div></div>
+        </section>
+      </main>
+    </div>
+    <div class="modal-backdrop" id="event-modal" hidden role="presentation">
+      <article class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <header class="modal-header"><div><h2 class="modal-title" id="modal-title">Request details</h2><p class="modal-subtitle" id="modal-subtitle"></p></div><button class="close-modal" id="close-modal" type="button" aria-label="Close request details">&times;</button></header>
+        <div class="modal-body" id="modal-body"></div>
+      </article>
+    </div>
+    <script>
+      const state = { events: [], activeEventId: null };
+      const $ = (id) => document.getElementById(id);
+      const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
+
+      async function loadMonitor() {
+        try {
+          const response = await fetch('/api/monitor');
+          if (!response.ok) throw new Error('Monitor endpoint unavailable.');
+          const data = await response.json();
+          state.events = data.events;
+          renderSummary();
+          renderEvents();
+          $('updated').textContent = `Updated ${new Date().toLocaleTimeString()}`;
+        } catch (error) { $('events').innerHTML = `<div class="error">${escapeHtml(error.message)}</div>`; }
+      }
+
+      function renderSummary() {
+        const events = state.events;
+        $('total').textContent = events.length;
+        $('mcp').textContent = events.filter((event) => event.kind === 'mcp').length;
+        $('errors').textContent = events.filter((event) => event.status >= 400).length;
+        const average = events.length ? events.reduce((sum, event) => sum + event.duration_ms, 0) / events.length : 0;
+        $('latency').textContent = `${average.toFixed(1)} ms`;
+      }
+
+      function renderEvents() {
+        const query = $('search').value.toLowerCase().trim();
+        const kind = $('kind').value;
+        const status = $('status').value;
+        const events = state.events.filter((event) => {
+          const text = `${event.path} ${event.method} ${event.mcp?.server_key || ''} ${event.mcp?.operation || ''}`.toLowerCase();
+          return (!query || text.includes(query)) && (kind === 'all' || event.kind === kind) && (status === 'all' || (status === 'error' ? event.status >= 400 : event.status < 400));
+        });
+        if (!events.length) { $('events').innerHTML = '<div class="empty">No events match the active filters.</div>'; return; }
+        $('events').innerHTML = `<table><thead><tr><th>Time</th><th>Request</th><th>Protocol received</th><th>Result</th><th>Headers</th></tr></thead><tbody>${events.slice(0, 100).map((event) => {
+          const headers = Object.entries(event.protocol?.headers || {}).map(([key, value]) => `<div>${escapeHtml(key)}: ${escapeHtml(value)}</div>`).join('');
+          const context = event.mcp ? `${escapeHtml(event.mcp.server_key)} / ${escapeHtml(event.mcp.operation)}` : 'No MCP operation';
+          const statusClass = event.status >= 400 ? ' error' : '';
+          return `<tr class="event-row" data-event-id="${escapeHtml(event.id)}" tabindex="0"><td>${escapeHtml(new Date(event.timestamp).toLocaleTimeString())}<span class="subtle">${escapeHtml(event.client)}</span></td><td><span class="method">${escapeHtml(event.method)}</span> <span class="kind ${event.kind === 'http' ? 'http' : ''}">${escapeHtml(event.kind)}</span><br><code>${escapeHtml(event.path)}</code><span class="subtle">${context}</span></td><td><strong>${escapeHtml(event.protocol?.version)}</strong><span class="subtle">${escapeHtml(event.protocol?.content_type || 'No body')} / ${escapeHtml(event.protocol?.content_length || 0)} bytes</span></td><td><span class="status${statusClass}">${escapeHtml(event.status)}</span><span class="subtle">${escapeHtml(event.duration_ms)} ms</span></td><td><button class="open-event" type="button">Open details</button></td></tr>`;
+        }).join('')}</tbody></table>`;
+        document.querySelectorAll('.event-row').forEach((row) => {
+          row.addEventListener('click', () => openEvent(row.dataset.eventId));
+          row.addEventListener('keydown', (keyboardEvent) => { if (keyboardEvent.key === 'Enter' || keyboardEvent.key === ' ') { keyboardEvent.preventDefault(); openEvent(row.dataset.eventId); } });
+        });
+        if (state.activeEventId) {
+          const activeEvent = state.events.find((event) => event.id === state.activeEventId);
+          if (activeEvent) renderModal(activeEvent);
+        }
+      }
+
+      function renderModal(event) {
+        const protocol = protocolData(event);
+        const headers = Object.entries(event.protocol?.headers || {}).map(([key, value]) => `<div>${escapeHtml(key)}: ${escapeHtml(value)}</div>`).join('');
+        $('modal-title').textContent = `${event.method} ${event.path}`;
+        $('modal-subtitle').textContent = `${event.kind.toUpperCase()} event / ${new Date(event.timestamp).toLocaleString()}`;
+        $('modal-body').innerHTML = `<section class="modal-section modal-wide"><h3>Listener activity</h3><div class="listener-meta"><div class="listener-stat"><span class="listener-stat-label">Method</span><strong class="listener-stat-value">${escapeHtml(event.method)}</strong></div><div class="listener-stat"><span class="listener-stat-label">Status</span><strong class="listener-stat-value">${escapeHtml(event.status)}</strong></div><div class="listener-stat"><span class="listener-stat-label">Latency</span><strong class="listener-stat-value">${escapeHtml(event.duration_ms)} ms</strong></div><div class="listener-stat"><span class="listener-stat-label">Client</span><strong class="listener-stat-value">${escapeHtml(event.client)}</strong></div></div><div class="http-strip"><span class="http-chip">${escapeHtml(event.protocol?.version)}</span><span class="http-chip">${escapeHtml(event.method)} ${escapeHtml(event.path)}</span><span class="http-chip muted">${escapeHtml(event.protocol?.content_type || 'No body')}</span><span class="http-chip muted">${escapeHtml(event.protocol?.content_length || 0)} bytes</span></div></section><section class="modal-section"><h3>Request summary</h3><dl class="detail-list"><div><dt>Result</dt><dd>${escapeHtml(event.status)}</dd></div><div><dt>Duration</dt><dd>${escapeHtml(event.duration_ms)} ms</dd></div><div><dt>Operation</dt><dd>${escapeHtml(event.mcp ? `${event.mcp.server_key} / ${event.mcp.operation}` : 'HTTP only')}</dd></div></dl></section><section class="modal-section"><h3>HTTP protocol received</h3><dl class="detail-list"><div><dt>Version</dt><dd>${escapeHtml(event.protocol?.version)}</dd></div><div><dt>Content type</dt><dd>${escapeHtml(event.protocol?.content_type || 'No body')}</dd></div><div><dt>Content length</dt><dd>${escapeHtml(event.protocol?.content_length || 0)} bytes</dd></div></dl></section><section class="modal-section modal-wide"><h3>MCP Traffic canvas</h3><span class="protocol-label">${escapeHtml(protocol.method)} / ${escapeHtml(protocol.transport)}</span>${protocolCanvas(event, protocol)}</section><section class="modal-section"><h3>Received headers</h3><pre class="code-block">${headers || 'No headers received'}</pre></section><section class="modal-section"><h3>MCP JSON-RPC response</h3><pre class="code-block">${escapeHtml(JSON.stringify(protocol.response, null, 2))}</pre></section>`;
+        $('event-modal').hidden = false;
+      }
+
+      function protocolData(event) {
+        const operation = event.mcp?.operation;
+        const incoming = event.mcp?.request_payload;
+        const method = operation === 'execute_tool' ? 'tools/call' : operation === 'list_tools' ? 'tools/list' : 'HTTP ingress';
+        let params = {};
+        if (operation === 'execute_tool') params = { name: incoming?.tool_name || 'tool', arguments: incoming?.arguments || {} };
+        const request = { jsonrpc: '2.0', id: event.id, method, params };
+        const response = event.status >= 400 ? { jsonrpc: '2.0', id: event.id, error: { code: -32000, message: 'Request failed at transport boundary' } } : { jsonrpc: '2.0', id: event.id, result: operation === 'list_tools' ? { tools: [] } : { content: [] } };
+        return { method, request, response, transport: event.mcp ? 'MCP over stdio / JSON-RPC 2.0' : 'HTTP ingress' };
+      }
+
+      function protocolCanvas(event, protocol) {
+        const prefix = `mcp-${String(event.id).replace(/[^a-zA-Z0-9]/g, '')}`;
+        const requestLines = JSON.stringify(protocol.request, null, 2).split('\n').slice(0, 7);
+        const responseLines = JSON.stringify(protocol.response, null, 2).split('\n').slice(0, 7);
+        const textLines = (lines, x, y) => lines.map((line, index) => `<text class="rpc-text" x="${x}" y="${y + index * 15}">${escapeHtml(line.slice(0, 31))}</text>`).join('');
+        return `<div class="network-canvas"><svg class="network-svg" viewBox="0 0 1200 330" role="img" aria-label="MCP request and response protocol flow"><defs><path id="${prefix}-request" d="M 245 132 C 390 92, 810 92, 955 132" /><path id="${prefix}-response" d="M 955 270 C 810 310, 390 310, 245 270" /></defs><path class="network-line request-line" d="M 245 132 C 390 92, 810 92, 955 132" /><path class="network-line response-line reverse" d="M 955 270 C 810 310, 390 310, 245 270" /><circle class="packet"><animateMotion dur="2.8s" repeatCount="indefinite"><mpath href="#${prefix}-request" /></animateMotion></circle><circle class="packet reverse"><animateMotion dur="3.4s" repeatCount="indefinite"><mpath href="#${prefix}-response" /></animateMotion></circle><g transform="translate(70 130)"><rect class="node" width="175" height="125" rx="10" /><text class="node-label" x="87" y="46" text-anchor="middle">MCP client</text><text class="node-meta" x="87" y="68" text-anchor="middle">request origin</text><text class="node-meta" x="87" y="91" text-anchor="middle">HTTP listener</text></g><g transform="translate(955 130)"><rect class="node" width="175" height="125" rx="10" /><text class="node-label" x="87" y="46" text-anchor="middle">${escapeHtml(event.mcp?.server_key || 'HTTP')}</text><text class="node-meta" x="87" y="68" text-anchor="middle">MCP server</text><text class="node-meta" x="87" y="91" text-anchor="middle">stdio transport</text></g><g transform="translate(485 8)"><rect class="rpc-file" width="230" height="96" rx="8" /><path class="rpc-fold" d="M196 0h34v34h-34z" /><text class="rpc-title" x="16" y="23">REQUEST / JSON-RPC 2.0</text>${textLines(requestLines.slice(0, 4), 16, 47)}</g><g transform="translate(485 174)"><rect class="rpc-file" width="230" height="96" rx="8" /><path class="rpc-fold" d="M196 0h34v34h-34z" /><text class="rpc-title" x="16" y="23">RESPONSE / JSON-RPC 2.0</text>${textLines(responseLines.slice(0, 4), 16, 47)}</g><text class="node-meta" x="600" y="120" text-anchor="middle">request channel</text><text class="node-meta" x="600" y="302" text-anchor="middle">response channel</text></svg><span class="canvas-caption">request ⇄ response / live protocol view</span></div>`;
+      }
+
+      function openEvent(eventId) {
+        const event = state.events.find((entry) => entry.id === eventId);
+        if (!event) return;
+        state.activeEventId = eventId;
+        renderModal(event);
+      }
+
+      function closeModal() {
+        state.activeEventId = null;
+        $('event-modal').hidden = true;
+      }
+
+      $('search').addEventListener('input', renderEvents);
+      $('kind').addEventListener('change', renderEvents);
+      $('status').addEventListener('change', renderEvents);
+      $('refresh').addEventListener('click', loadMonitor);
+      $('close-modal').addEventListener('click', closeModal);
+      $('event-modal').addEventListener('click', (event) => { if (event.target.id === 'event-modal') closeModal(); });
+      document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !$('event-modal').hidden) closeModal(); });
+      loadMonitor();
+      window.setInterval(loadMonitor, 1500);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MCP Control Room</title>
+    <style>
+      :root {
+        --ink: #17211b;
+        --muted: #68746b;
+        --paper: #f3f5ef;
+        --panel: #ffffff;
+        --line: #dce3d9;
+        --green: #2d6a4f;
+        --green-soft: #e5f1e9;
+        --orange: #b66a2c;
+        --shadow: 0 18px 50px rgba(36, 57, 43, 0.08);
+      }
+
+      * { box-sizing: border-box; }
+      body { margin: 0; color: var(--ink); background: var(--paper); font-family: "IBM Plex Sans", "Trebuchet MS", sans-serif; }
+      button, input { font: inherit; }
+      button { cursor: pointer; }
+      .shell { min-height: 100vh; display: grid; grid-template-columns: 250px 1fr; }
+      .sidebar { padding: 28px 20px; background: #1b2a22; color: #eff6ed; display: flex; flex-direction: column; }
+      .logo { display: flex; gap: 10px; align-items: center; font-size: 1.05rem; font-weight: 700; letter-spacing: .04em; }
+      .logo-mark { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; color: #1b2a22; background: #b7d8bd; font-weight: 800; }
+      .sidebar small { margin: 52px 12px 12px; color: #9eb2a3; text-transform: uppercase; letter-spacing: .12em; font-size: .68rem; }
+      .nav { display: grid; gap: 5px; }
+      .nav button, .nav a { padding: 11px 12px; border: 0; border-radius: 7px; text-align: left; color: #b7c9bb; background: transparent; text-decoration: none; }
+      .nav button.active, .nav button:hover, .nav a:hover { color: #fff; background: #294436; }
+      .sidebar-footer { margin-top: auto; padding: 14px 12px; border-top: 1px solid #385143; color: #9eb2a3; font-size: .82rem; line-height: 1.5; }
+      main { max-width: 1440px; width: 100%; padding: 34px 44px 54px; margin: 0 auto; }
+      .topbar { display: flex; justify-content: space-between; gap: 24px; align-items: flex-start; margin-bottom: 30px; }
+      .kicker { color: var(--green); text-transform: uppercase; letter-spacing: .16em; font-size: .72rem; font-weight: 700; }
+      h1 { margin: 7px 0 8px; font-family: Georgia, serif; font-weight: 500; font-size: clamp(2rem, 4vw, 3.3rem); letter-spacing: -.03em; }
+      .subtitle { margin: 0; color: var(--muted); max-width: 620px; }
+      .actions { display: flex; gap: 10px; align-items: center; }
+      .button { border: 1px solid var(--line); padding: 10px 14px; border-radius: 7px; color: var(--ink); background: var(--panel); font-weight: 700; }
+      .button.primary { color: #fff; background: var(--green); border-color: var(--green); }
+      .button:hover { filter: brightness(.97); transform: translateY(-1px); }
+      .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
+      .metric, .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); }
+      .metric { padding: 18px 20px; }
+      .metric-label { color: var(--muted); font-size: .8rem; }
+      .metric-value { display: block; margin-top: 7px; font-size: 1.8rem; font-weight: 700; }
+      .metric-note { display: block; margin-top: 4px; color: var(--green); font-size: .78rem; }
+      .workspace { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(300px, .65fr); gap: 18px; }
+      .panel-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 20px 22px; border-bottom: 1px solid var(--line); }
+      h2 { margin: 0; font-size: 1.1rem; }
+      .search { width: 230px; border: 1px solid var(--line); border-radius: 6px; padding: 9px 11px; color: var(--ink); background: #fbfcfa; }
+      .server-list { padding: 8px 12px 14px; }
+      .server { width: 100%; display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; gap: 13px; align-items: center; padding: 15px 10px; border: 0; border-bottom: 1px solid #eef1ec; text-align: left; color: var(--ink); background: transparent; }
+      .server:last-child { border-bottom: 0; }
+      .server:hover, .server.selected { background: #f4f8f2; }
+      .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+      .server-name { display: block; font-weight: 700; }
+      .server-description { display: block; overflow: hidden; color: var(--muted); font-size: .8rem; text-overflow: ellipsis; white-space: nowrap; }
+      .server-command { color: var(--muted); font-family: monospace; font-size: .76rem; }
+      .status { padding: 5px 8px; border-radius: 99px; color: var(--green); background: var(--green-soft); font-size: .7rem; font-weight: 700; text-transform: uppercase; }
+      .detail { min-height: 420px; }
+      .detail-body { padding: 22px; }
+      .detail-empty { color: var(--muted); line-height: 1.6; }
+      .detail-title { margin: 0 0 7px; font-family: Georgia, serif; font-size: 1.8rem; font-weight: 500; }
+      .detail-copy { margin: 0 0 22px; color: var(--muted); line-height: 1.55; }
+      .detail-meta { display: grid; gap: 10px; margin-bottom: 25px; }
+      .meta { display: flex; justify-content: space-between; gap: 16px; padding-bottom: 10px; border-bottom: 1px solid #eef1ec; font-size: .84rem; }
+      .meta span:first-child { color: var(--muted); }
+      .tools-title { margin: 0 0 10px; font-size: .85rem; text-transform: uppercase; letter-spacing: .08em; }
+      .tool-list { display: grid; gap: 7px; }
+      .tool { padding: 10px; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); font-size: .82rem; }
+      .tool strong { display: block; color: var(--ink); margin-bottom: 3px; }
+      .notice { padding: 11px 12px; border-radius: 6px; color: var(--orange); background: #fff4e8; font-size: .82rem; line-height: 1.45; }
+      .empty { padding: 28px 12px; color: var(--muted); text-align: center; }
+      @media (max-width: 980px) { .shell { grid-template-columns: 1fr; } .sidebar { padding: 16px 20px; } .sidebar small, .sidebar-footer { display: none; } .nav { display: flex; margin-top: 18px; overflow: auto; } main { padding: 28px 20px; } .workspace { grid-template-columns: 1fr; } }
+      @media (max-width: 650px) { .topbar { display: block; } .actions { margin-top: 18px; } .metrics { grid-template-columns: repeat(2, 1fr); } .panel-header { align-items: stretch; flex-direction: column; } .search { width: 100%; } .server-command { display: none; } }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="logo"><span class="logo-mark">M</span> MCP CONTROL ROOM</div>
+        <small>Workspace</small>
+        <nav class="nav" aria-label="Main navigation">
+          <button class="active" type="button">Overview</button>
+          <a href="/monitor.html">Listener</a>
+          <button type="button">Tool catalog</button>
+          <button type="button">Configuration</button>
+        </nav>
+        <div class="sidebar-footer">A focused view of the MCP servers registered in your local catalog.</div>
+      </aside>
+      <main>
+        <header class="topbar">
+          <div>
+            <div class="kicker">Operations / Local catalog</div>
+            <h1>Server overview</h1>
+            <p class="subtitle">See what is registered, inspect capabilities, and keep your MCP workspace ready for action.</p>
+          </div>
+          <div class="actions"><button class="button" id="refresh" type="button">Refresh</button><button class="button primary" id="discover" type="button">Discover tools</button></div>
+        </header>
+        <section class="metrics" aria-label="Server summary">
+          <div class="metric"><span class="metric-label">Registered servers</span><strong class="metric-value" id="total">--</strong><span class="metric-note">Catalog entries</span></div>
+          <div class="metric"><span class="metric-label">Configured</span><strong class="metric-value" id="configured">--</strong><span class="metric-note">Ready to inspect</span></div>
+          <div class="metric"><span class="metric-label">Credentials</span><strong class="metric-value" id="credentials">--</strong><span class="metric-note">Environment-backed</span></div>
+          <div class="metric"><span class="metric-label">Last refresh</span><strong class="metric-value" id="updated">--</strong><span class="metric-note">Live local data</span></div>
+        </section>
+        <section class="workspace">
+          <div class="panel">
+            <div class="panel-header"><h2>Server inventory</h2><input class="search" id="search" type="search" placeholder="Search servers" aria-label="Search servers" /></div>
+            <div class="server-list" id="servers"><div class="empty">Loading server catalog...</div></div>
+          </div>
+          <aside class="panel detail" id="detail"><div class="panel-header"><h2>Server detail</h2></div><div class="detail-body"><p class="detail-empty">Select a server to inspect its command, configuration, and available tools.</p></div></aside>
+        </section>
+      </main>
+    </div>
+    <script>
+      const state = { servers: [], selected: null };
+      const $ = (id) => document.getElementById(id);
+
+      async function loadServers() {
+        const response = await fetch('/api/servers');
+        if (!response.ok) throw new Error('Could not load the server catalog.');
+        const data = await response.json();
+        state.servers = data.servers;
+        $('total').textContent = data.total;
+        $('configured').textContent = data.total;
+        $('credentials').textContent = data.servers.filter((server) => server.has_credentials).length;
+        $('updated').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        renderServers();
+      }
+
+      function renderServers() {
+        const query = $('search').value.toLowerCase().trim();
+        const visible = state.servers.filter((server) => `${server.key} ${server.description}`.toLowerCase().includes(query));
+        $('servers').innerHTML = visible.length ? visible.map((server) => `
+          <button class="server ${state.selected === server.key ? 'selected' : ''}" data-server="${server.key}" type="button">
+            <span class="dot" aria-hidden="true"></span><span><span class="server-name">${server.key}</span><span class="server-description">${server.description}</span></span><span><span class="server-command">${server.command}</span> <span class="status">${server.status}</span></span>
+          </button>`).join('') : '<div class="empty">No servers match your search.</div>';
+        document.querySelectorAll('[data-server]').forEach((button) => button.addEventListener('click', () => selectServer(button.dataset.server)));
+      }
+
+      function selectServer(key) {
+        state.selected = key;
+        const server = state.servers.find((entry) => entry.key === key);
+        $('detail').querySelector('.detail-body').innerHTML = `<h3 class="detail-title">${server.key}</h3><p class="detail-copy">${server.description}</p><div class="detail-meta"><div class="meta"><span>Command</span><strong>${server.command}</strong></div><div class="meta"><span>State</span><strong>${server.status}</strong></div><div class="meta"><span>Credentials</span><strong>${server.has_credentials ? 'Environment variables' : 'Not required'}</strong></div></div><h3 class="tools-title">Available tools</h3><div class="tool-list" id="tools"><div class="notice">Choose Discover tools to query this server.</div></div>`;
+        renderServers();
+      }
+
+      async function discoverTools() {
+        if (!state.selected) { $('detail').querySelector('.detail-body').insertAdjacentHTML('beforeend', '<div class="notice">Select a server first.</div>'); return; }
+        const tools = $('tools');
+        tools.innerHTML = '<div class="notice">Connecting to MCP server...</div>';
+        try {
+          const response = await fetch(`/api/servers/${encodeURIComponent(state.selected)}/tools`);
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error);
+          tools.innerHTML = data.tools.length ? data.tools.map((tool) => `<div class="tool"><strong>${tool.name || 'Unnamed tool'}</strong>${tool.description || 'No description available.'}</div>`).join('') : '<div class="notice">No tools were returned.</div>';
+        } catch (error) { tools.innerHTML = `<div class="notice">${error.message}</div>`; }
+      }
+
+      $('search').addEventListener('input', renderServers);
+      $('refresh').addEventListener('click', () => loadServers().catch(showError));
+      $('discover').addEventListener('click', discoverTools);
+      function showError(error) { $('servers').innerHTML = `<div class="notice">${error.message}</div>`; }
+      loadServers().catch(showError);
+    </script>
+  </body>
+</html>
